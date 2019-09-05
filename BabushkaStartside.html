@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css?family=Luckiest+Guy|PT+Serif&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        body {
+            margin: 50px;
+        }
+
+        nav {
+            display: flex;
+            width: 100%;
+            height: 20vh;
+            margin: auto;
+            max-width: 1000px;
+            justify-content: space-between;
+            text-align: center;
+        }
+
+        button {
+            padding: 1rem 2rem 1.15rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            /*  color: #ebebeb;*/
+            min-width: 80px;
+            margin: auto;
+            border: none;
+            border-radius: 5px;
+
+        }
+
+        button:hover {
+            background-image: url('http://scottyzen.com/cp/button.png');
+            background-size: 100% 100%;
+            color: #27262c;
+            animation: spring 300ms ease-out;
+            text-shadow: 0 -1px 0 #ef816c;
+            font-weight: bold;
+        }
+
+        button:active {
+            transform: translateY(4px);
+        }
+
+        /*--------------------------------------BURGER MENU-----------------------------------------------*/
+        @media screen and (max-width:768px) {
+
+            nav {
+                display: block;
+
+            }
+
+        }
+
+        /*--------------------------------------BURGER MENU SLUT-----------------------------------------------*/
+
+        img {
+            width: 100%;
+        }
+
+        #liste {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-gap: 1em;
+        }
+
+        .person {
+            padding: 1em;
+            border: 1px solid;
+            cursor: pointer;
+            border-color: rgba(128, 128, 128, 0.26);
+        }
+
+        .valgt {
+            background-color: #ef816c;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .overskift {
+            flex-wrap: wrap;
+            text-align: center;
+        }
+
+        .overskriftchild h1 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 10vw;
+            color: rgb(239, 129, 108);
+            display: flex;
+            flex-basis: 100px;
+            flex-grow: 1;
+            align-content: center;
+            justify-content: center;
+            margin-top: 50px;
+
+        }
+
+        @media only screen and (max-width: 950px) {
+            nav {
+                width: 80vw;
+            }
+        }
+
+
+        h2,
+        h3,
+        p {
+            font-family: 'PT Serif', serif;
+        }
+
+        p {
+            font-size: 1vw;
+            font-weight: bold;
+        }
+
+        h2 {
+            font-weight: lighter;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="overskrift">
+        <div class="overskriftchild">
+            <h1>Babushka</h1>
+        </div>
+    </div>
+    <nav>
+        <button data-køn="alle" class="valgt">Alle</button>
+        <button data-køn="forretter">Forretter</button>
+        <button data-køn="hovedretter">Hovedretter</button>
+        <button data-køn="desserter">Desserter</button>
+        <button data-køn="drikkevarer">Drikkevarer</button>
+        <button data-køn="sideorders">Sideorders</button>
+    </nav>
+
+    <section id="liste"></section>
+
+    <template>
+        <article class="person">
+            <img src="" alt="" class="profil-billede">
+            <h2 class="navn"></h2>
+            <h2 class="kort"></h2>
+            <h2 class="pris"></h2>
+        </article>
+    </template>
+    <script>
+        document.addEventListener("DOMContentLoaded", start);
+        const url = `https://spreadsheets.google.com/feeds/list/17Dd7DvkPaFamNUdUKlrFgnH6POvBJXac7qyiS6zNRw0/od6/public/values?alt=json`;
+        let personer;
+        let filter = "alle";
+        // første funktion der kaldes efter DOM er loaded
+        function start() {
+            const filterKnapper = document.querySelectorAll("button");
+            filterKnapper.forEach(knap => knap.addEventListener("click", filtrerPersoner));
+            loadData();
+        }
+        // funktion der filtrerer personer (json)
+        function filtrerPersoner() {
+            filter = this.dataset.køn; // sæt variabel "filter" til aktuel værdi
+            document.querySelector(".valgt").classList.remove("valgt"); // fjern klassen valgt fra aktuel knap
+            this.classList.add("valgt") // marker den nyvalgte knap
+            vis(); // kald funktionen vis igen med nyt filter
+        }
+        // funktion der henter data fra Google sheet (via url)
+        async function loadData() {
+            const response = await fetch(url);
+            personer = await response.json();
+            vis();
+        }
+        //funktion der viser personer i liste view
+        function vis() {
+            const dest = document.querySelector("#liste"); // container til articles med en person
+            const skabelon = document.querySelector("template").content; // select indhold af html skabelon (article)
+            dest.textContent = "";
+            personer.feed.entry.forEach(person => { // loop igennem json (personer)
+                if (person.gsx$kategori.$t == filter || filter == "alle") { // tjek hvilket køn personen har og sammenlign med filter eller vis alle
+                    const klon = skabelon.cloneNode(true);
+                    klon.querySelector(".navn").textContent = person.gsx$navn.$t;
+                    klon.querySelector(".pris").textContent += " " + person.gsx$pris.$t;
+                    klon.querySelector(".profil-billede").src = "/imgs/small/" + person.gsx$billede.$t + "-sm.jpg";;
+                    dest.appendChild(klon);
+
+                    dest.lastElementChild.addEventListener("click", () => {
+                        location.href = `BabushkaNySide.html?id=${person.gsx$id.$t}`;
+                    });
+
+                }
+            })
+        }
+
+    </script>
+</body>
+
+</html>

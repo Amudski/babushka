@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <link href="https://fonts.googleapis.com/css?family=Luckiest+Guy|PT+Serif&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            list-style-type: none;
+        }
+        body {margin: 50px;}
+
+        nav {
+            display: flex;
+            width: 100%;
+            height: 20vh;
+            margin: auto;
+            max-width: 1000px;
+            justify-content: space-between;
+            text-align: center;
+        }
+
+        button {
+            padding: 1rem 2rem 1.15rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            /*  color: #ebebeb;*/
+            min-width: 80px;
+            margin: auto;
+            border: none;
+            border-radius: 5px;
+
+        }
+
+        button:hover {
+            background-image: url('http://scottyzen.com/cp/button.png');
+            background-size: 100% 100%;
+            color: #27262c;
+            animation: spring 300ms ease-out;
+            text-shadow: 0 -1px 0 #ef816c;
+            font-weight: bold;
+        }
+
+        button:active {
+            transform: translateY(4px);
+        }
+
+        /*--------------------------------------BURGER MENU-----------------------------------------------*/
+        @media screen and (max-width:768px) {
+
+            nav {
+                display: block;
+
+            }
+
+        }
+
+        /*--------------------------------------BURGER MENU SLUT-----------------------------------------------*/
+        img {
+            width: 100%;
+        }
+
+        #liste {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-gap: 1em;
+
+        }
+
+        #detalje {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: hsla(282, 22%, 31%, 0.53);
+            overflow: scroll;
+        }
+
+        #detalje .luk {
+            position: fixed;
+            top: 0;
+            right: 0;
+            font-size: 4rem;
+        }
+
+        #detalje .person {
+            width: 60vw;
+            min-height: 50vh;
+            margin: 4rem auto;
+            padding: 4rem;
+            background: white;
+
+        }
+
+        .person {
+            padding: 1em;
+            border: 1px solid;
+            cursor: pointer;
+            border-color: rgba(128, 128, 128, 0.26);
+
+        }
+
+        .valgt {
+            background-color: #ef816c;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .overskift {
+            flex-wrap: wrap;
+            text-align: center;
+        }
+
+        .overskriftchild h1 {
+            font-family: 'Luckiest Guy', cursive;
+            font-size: 10vw;
+            color: rgb(239, 129, 108);
+            display: flex;
+            flex-basis: 100px;
+            flex-grow: 1;
+            align-content: center;
+            justify-content: center;
+            margin-top: 50px;
+
+        }
+
+        @media only screen and (max-width: 950px) {
+            nav {
+                width: 80vw;
+            }
+        }
+
+
+        h2,
+        h3,
+        p {
+            font-family: 'PT Serif', serif;
+        }
+
+        p {
+            font-size: 1vw;
+            font-weight: bold;
+        }
+
+        h2 {
+            font-weight: lighter;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="overskrift">
+        <div class="overskriftchild">
+            <h1>Babushka</h1>
+        </div>
+    </div>
+    <h1></h1>
+    <nav>
+        <button data-køn="alle" class="valgt">
+            <p>Alle</p>
+        </button>
+        <button data-køn="forretter">
+            <p>Forretter</p>
+        </button>
+        <button data-køn="hovedretter">
+            <p>Hovedretter</p>
+        </button>
+        <button data-køn="desserter">
+            <p>Desserter</p>
+        </button>
+        <button data-køn="drikkevarer">
+            <p>Drikkevarer</p>
+        </button>
+        <button data-køn="sideorders">
+            <p>Sideorders</p>
+        </button>
+
+    </nav>
+
+    <section id="liste"></section>
+
+    <section id="detalje">
+        <article class="person">
+            <button class="luk">X</button>
+            <h2></h2>
+            <img src="" alt="">
+            <h2 class="oprindelse"></h2>
+            <p class="kort"></p>
+            <h3 class="pris"></h3>
+        </article>
+    </section>
+
+    <template>
+        <article class="person">
+            <img src="" alt="" class="profil-billede">
+            <h2 class="navn"></h2>
+            <h3 class="pris"></h3>
+        </article>
+    </template>
+    <script>
+        document.addEventListener("DOMContentLoaded", start);
+        const url = `https://spreadsheets.google.com/feeds/list/17Dd7DvkPaFamNUdUKlrFgnH6POvBJXac7qyiS6zNRw0/od6/public/values?alt=json`;
+        let personer;
+        let filter = "alle";
+        // første funktion der kaldes efter DOM er loaded
+        function start() {
+            const filterKnapper = document.querySelectorAll("nav button");
+            filterKnapper.forEach(knap => knap.addEventListener("click", filtrerPersoner));
+            //document.querySelector("#detalje").style.display = "none";
+            skjulDetalje();
+            loadData();
+        }
+        // funktion der filtrerer personer (json)
+        function filtrerPersoner() {
+            filter = this.dataset.køn; // sæt variabel "filter" til aktuel værdi
+            document.querySelector(".valgt").classList.remove("valgt"); // fjern klassen valgt fra aktuel knap
+            this.classList.add("valgt") // marker den nyvalgte knap
+            vis(); // kald funktionen vis igen med nyt filter
+        }
+        // funktion der henter data fra Google sheet (via url)
+        async function loadData() {
+            const response = await fetch(url);
+            personer = await response.json();
+            vis();
+        }
+        //funktion der viser personer i liste view
+        function vis() {
+            console.log(filter);
+            const dest = document.querySelector("#liste"); // container til articles med en person
+            const skabelon = document.querySelector("template").content; // select indhold af html skabelon (article)
+            dest.textContent = "";
+            personer.feed.entry.forEach(person => { // loop igennem json (personer)
+                if (person.gsx$kategori.$t == filter || filter == "alle") { // tjek hvilket køn personen har og sammenlign med filter eller vis alle
+                    const klon = skabelon.cloneNode(true);
+                    klon.querySelector(".navn").textContent = person.gsx$navn.$t;
+
+                    //                    klon.querySelector(".kort").textContent = person.gsx$kort.$t
+                    klon.querySelector(".profil-billede").src = "/imgs/small/" + person.gsx$billede.$t + "-sm.jpg";
+                    klon.querySelector(".pris").textContent += " " + person.gsx$pris.$t + ",-";
+                    klon.querySelector(".person").addEventListener("click", () => {
+                        visDetalje(person);
+                    });
+                    dest.appendChild(klon);
+                }
+            })
+        }
+
+        function visDetalje(person) {
+            console.log(person);
+
+            document.querySelector("#detalje").style.display = "block";
+
+            document.querySelector("#detalje .luk").addEventListener("click", skjulDetalje);
+
+            document.querySelector("#detalje h2").textContent = person.gsx$navn.$t;
+            document.querySelector("#detalje .kort").textContent = person.gsx$kort.$t;
+            document.querySelector("#detalje .oprindelse").textContent = "Oprindelse: " + person.gsx$oprindelse.$t;
+            document.querySelector("#detalje .pris").textContent = "Pris: " + person.gsx$pris.$t + ",-";
+
+            document.querySelector("#detalje img").src = "/imgs/large/" + person.gsx$billede.$t + ".jpg";
+            document.querySelector("#detalje img").alt = `Portræt af ${person.gsx$billede.$t}`;
+
+
+            //            document.querySelector("#detalje .githublink").href = `https://github.com/${person.gsx$github.$t}`;
+            //            document.querySelector("#detalje .githublink").textContent = `github.com/${person.gsx$github.$t}`;
+        }
+
+        function skjulDetalje() {
+            document.querySelector("#detalje").style.display = "none";
+        }
+    </script>
+</body></html>
